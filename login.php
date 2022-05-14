@@ -26,25 +26,47 @@ if (!empty($_SESSION['login'])) {
   session_destroy();
   header('Location: ./');
 }
-if(!empty($_COOKIE['bad_login'])){
-    setcookie('bad_login','',1000000);
-    $badloging = true;
-}
-else $badloging = false;
+
+
 // В суперглобальном массиве $_SERVER PHP сохраняет некторые заголовки запроса HTTP
 // и другие сведения о клиненте и сервере, например метод текущего запроса $_SERVER['REQUEST_METHOD'].
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+  $badloging = false;
+  $invlog = false;
+  $invpass = false;
+  if(!empty($_COOKIE['bad_login'])){
+      setcookie('bad_login','',1000000);
+      $badloging = true;
+  }
+  if(!empty($_COOKIE['invalid_login'])){
+    setcookie('invalid_login','',1000000);
+    $invlog = true;
+  }
+  if(!empty($_COOKIE['invalid_pass'])){
+    setcookie('invalid_pass','',1000000);
+    $invpass = true;
+}
 ?>
-
-<form action="" method="post">
-  Login:
-  <input name="login" />
-  <br/>
-  Password:
-  <input name="pass" />
-  <input type="submit" value="Войти" />
-</form>
-<?php if($badloging) print('<div> Invalid login! </div') ?>
+<html lang="en">
+<head>
+  <meta charset='utf-8'/>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'/>
+</head>
+<body>
+  <form action="" method="post">
+    Login:
+    <input name="login" <?php if($invlog) print('class="error"') ?> /> 
+    <?php if($invlog) print('<div> Must only contain letters, numbers and dots </div>') ?>
+    <br/>
+    Password:
+    <input name="pass" <?php if($invpass) print('class="error"') ?>/>
+    <?php if($invpass) print('<div> Must only contain letters, numbers and dots </div>') ?>
+    <input type="submit" value="Войти" />
+  </form>
+  <?php if($badloging) print('<div> Invalid login! </div') ?>
+</body>
 <?php
 }
 // Иначе, если запрос был методом POST, т.е. нужно сделать авторизацию с записью логина в сессию.
@@ -53,6 +75,15 @@ else {
     $user = 'u47551';
     $pass = '4166807';
     $db = connectToDB($user,$pass);
+    $regex = "/^[\w\d\.]+$/";
+    if(!preg_match($regex,$_POST['login'])){
+      setcookie('invalid_login',1,time()+ 30 * 24 * 60 * 60);
+      header('Location: ./login.php');
+    }
+    if(!preg_match($regex,$_POST['pass'])){
+      setcookie('invalid_pass',1,time()+ 30 * 24 * 60 * 60);
+      header('Location: ./login.php');
+    }
 		try {
 			$stmt = $db->prepare("SELECT pass_hash, p_id FROM login WHERE login=:this_login");
 			$stmt->bindParam(':this_login',$_POST['login']);
