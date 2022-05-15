@@ -216,9 +216,9 @@ if (empty($_SERVER['PHP_AUTH_USER']) ||
         <th>Leviation</th>
       </tr>
       <tr>
-        <td><?php print(intval($supercounter['immortality'][0]));?></td>
-        <td><?php print(intval($supercounter['walkthroughwalls'][0]));?></td>
-        <td><?php print(intval($supercounter['levitation'][0]));?></td>
+        <td><?php if(!empty($supercounter['immortality'])) print(intval($supercounter['immortality'][0])); else print("0");?></td>
+        <td><?php if(!empty($supercounter['walkthroughwalls'])) print(intval($supercounter['walkthroughwalls'][0])); else print("0");?></td>
+        <td><?php if(!empty($supercounter['levitation'])) print(intval($supercounter['levitation'][0])); else print("0");?></td>
       </tr>
     </table>
  </div>
