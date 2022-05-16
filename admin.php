@@ -153,14 +153,6 @@ try {
 		print_r($initialauth->errorInfo());
 		exit();
 	}
-  $getPWD = $db->prepare("SELECT pass_hash FROM admin_auth WHERE login=:login");
-  $getPWD->bindParam(':login',$admin);
-  if($getPWD->execute() == false){
-		print_r($getPWD->errorCode());
-		print_r($getPWD->errorInfo());
-		exit();
-	}
-  $pwdread =  $getPWD->fetch(PDO::FETCH_ASSOC);
   $supcount = $db->prepare("SELECT name, COUNT(name) as sup_qty FROM superpowers GROUP BY name");
   if($supcount->execute() == false){
     print_r($supcount->errorCode());
@@ -188,13 +180,21 @@ try {
 // PHP хранит логин и пароль в суперглобальном массиве $_SERVER.
 // Подробнее см. стр. 26 и 99 в учебном пособии Веб-программирование и веб-сервисы.
 if (empty($_SERVER['PHP_AUTH_USER']) ||
-    empty($_SERVER['PHP_AUTH_PW']) ||
-    $_SERVER['PHP_AUTH_USER'] != $admin ||
-    !password_verify($_SERVER['PHP_AUTH_PW'],$pwdread['pass_hash'])) {
-  header('HTTP/1.1 401 Unanthorized');
-  header('WWW-Authenticate: Basic realm="http://u47551.kubsu-dev.ru/MelikovTask6/admin.php"');
-  print('<h1>401 Требуется авторизация</h1>');
-  exit();
+    empty($_SERVER['PHP_AUTH_PW'])) {
+  $getPWD = $db->prepare("SELECT pass_hash FROM admin_auth WHERE login=:login");
+  $getPWD->bindParam(':login',$_SERVER['PHP_AUTH_USER']);
+  if($getPWD->execute() == false){
+		print_r($getPWD->errorCode());
+		print_r($getPWD->errorInfo());
+		exit();
+	}
+  $pwdread =  $getPWD->fetch(PDO::FETCH_ASSOC);
+  if(empty($pwdread) || !password_verify($_SERVER['PHP_AUTH_PW'], $pwdread['pass_hash'])){
+    header('HTTP/1.1 401 Unanthorized');
+    header('WWW-Authenticate: Basic realm="http://u47551.kubsu-dev.ru/MelikovTask6/admin.php"');
+    print('<h1>401 Требуется авторизация</h1>');
+    exit();
+  }
 }
 ?>
 <html lang="en">
